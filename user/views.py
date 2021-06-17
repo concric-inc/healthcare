@@ -196,6 +196,7 @@ class UpdateData(views.APIView):
                         email=data['email'], request=request, message=token)
                     response_data['email'] = {
                         'email': data['email'],
+                        'success': True,
                         'info': 'verification link has been sent'
                     }
                     userinstance.email = data['email']
@@ -205,7 +206,7 @@ class UpdateData(views.APIView):
                         'email': str(e),
                         'success': False,
                         'code': 409
-                        
+
                     }
                     print(e)
             userinstance.save()
