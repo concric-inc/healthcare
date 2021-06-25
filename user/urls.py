@@ -1,5 +1,3 @@
-from user.models import PhoneNumber
-from django.contrib import admin
 from django.urls import path
 from .views import *
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -7,7 +5,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 urlpatterns = [
     path('registerphone/', RegisterPhoneView.as_view(),
          name='register_phone_number'),
-     path('logout/', LogoutView.as_view(),
+    path('logout/', LogoutView.as_view(),
          name='logout'),
     path('login/password/', LoginUsingPassword.as_view(),
          name='login'),
