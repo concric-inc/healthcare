@@ -30,5 +30,7 @@ urlpatterns = [
     #          VerifyPhoneForInstanceView.as_view(), name='verify instance'),
     #     path('verify/phone/instance/token/',
     #          CheckInstanceTokenView.as_view(), name='instance token verification'),
+    path('phone/verify/otp/',
+         OtpInstanceGenrator.as_view(), name='otp instance'),
 
 ]

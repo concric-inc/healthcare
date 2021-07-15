@@ -1,4 +1,4 @@
-from time import timezone
+from django.utils import timezone
 from cv001.utils.uid import decode_id, encode_id
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -9,14 +9,15 @@ class doctor(models.Model):
     UID = models.CharField(
         _('UID'),
         max_length=150,
-        help_text=('User id')
+        help_text=('User id'),
+        unique=True
     )
     professional_statement = models.TextField(
         _('professional_statement'), null=True)  # detailed overview of the doctor’s qualifications
     # url for acessing this model
     slug = models.CharField(_("slug"), max_length=100, unique=True)
     # date from which the doctor is working in profession
-    practicing_from = models.DateField(_('practicing from'), null=False)
+    practicing_from = models.DateField(_('practicing from'), null=True)
     joined_at = models.DateTimeField(
         _("joined at"), auto_now=True)  # joining date
 
@@ -63,6 +64,14 @@ class qualification(models.Model):
 
 
 class hospital(models.Model):
+    """
+    HOID 
+    DOCID 
+    name 
+    city 
+    start 
+    end 
+    """
     HOID = models.CharField(_("hospital id"), primary_key=True, max_length=150)
     DOCID = models.CharField(_("doctor id"), null=False, max_length=150)
     name = models.CharField(_("hospital name"), null=False, max_length=150)
@@ -75,3 +84,18 @@ class hospital(models.Model):
         hoid = encode_id(p=phone, t='hosp', ct=str(timezone.now()))
         self.HOID = hoid
         super(hospital, self).save(*args, **kwargs)
+
+
+class office(models.Model):
+    OFID = models.CharField(_("hospital id"), primary_key=True, max_length=150)
+    DOCID = models.CharField(_("doctor id"), null=False, max_length=150)
+    min_time_slot = models.IntegerField(_("min slot time"))
+    first_consultation_fee = models.IntegerField(_("first consultation fee"))
+    follow_up_fee = models.IntegerField(_("follow up fee"))
+    AID = models.CharField(_("AID"), max_length=150, null=True)
+
+    def save(self, *args, **kwargs):
+        phone = decode_id(self.DOCID)['p']
+        ofid = encode_id(p=phone, t='office', ct=str(timezone.now()))
+        self.OFID = ofid
+        super(office, self).save(*args, **kwargs)
