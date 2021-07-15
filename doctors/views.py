@@ -360,7 +360,8 @@ class OfficeView(APIView):
     def get(self, request):
         try:
             docid = getDocId(request=request)
-            
+            instance = self.model.objects.filter(DOCID=docid).all()
+            serinstance = self.ser(instance, many=True)
             response = {
                 'success': True,
                 'data': {
