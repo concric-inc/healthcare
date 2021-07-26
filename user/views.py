@@ -1,15 +1,15 @@
-from rest_framework import exceptions
+from user.utils.password import PasswodToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from cv001.settings import FRONT_END_LINK
 from datetime import timedelta
 from user.utils.sms import sms_
 from .utils.utils import is_user
 from cv001.messages import *
-from rest_framework.exceptions import APIException, NotFound
+from rest_framework.exceptions import NotFound
 from .utils.modelFunctions import savephone, savepin, update_address
 from django.utils import timezone
-from .utils.uid import decode_id, encode_id
-from cv001.utils import get_JWT_token, get_uid
+from cv001.utils.uid import decode_id, encode_id
+from cv001.utils.utils import get_JWT_token, get_uid
 from .models import Address, PasswordChangeRequestModel, PhoneNumber, Pincode, user, EmailToken
 from .ser import AddressSer, PhoneSer, PincodeSer, UpdateSer
 from rest_framework import views
@@ -36,12 +36,15 @@ class RegisterPhoneView(views.APIView):
                     otp = genrate_otp()
                     request.session['otp'] = otp
                     request.session['phone_instance'] = data
-                    if sms_(message='concric: Your otp is &&OTP&&'.replace('&&OTP&&', otp), to='91'+data):
+                    # if sms_(message='concric: Your otp is &&OTP&&'.replace('&&OTP&&', otp), to='91'+data):
+                    if 1:
+
                         response = {
                             'success': True,
                             'data': {
                                 'phone_number': data,
                                 'message': OTP_SENT,
+                                'otp': otp
                             }
                         }
                         return Response(response, status.HTTP_200_OK)
@@ -101,6 +104,7 @@ class OtpView(views.APIView):
             number = request.session['phone_instance']
             if not is_user(number):
                 if otp == request.session['otp']:
+                    del request.session['otp']
                     instance = self.model.objects.create(
                         phone_number=number)
                     instance.save(phone=number)
@@ -114,16 +118,15 @@ class OtpView(views.APIView):
                         }
                     }
                     return Response(response, status.HTTP_201_CREATED)
-                else:
-                    response = {
-                        'success': False,
-                        'error': {
-                            'message': OTP_INVALID,
-                            'code': 409
-                        }
-
+                response = {
+                    'success': False,
+                    'error': {
+                        'message': OTP_INVALID,
+                        'code': 409
                     }
-                    return Response(response, status.HTTP_409_CONFLICT, exception=True)
+
+                }
+                return Response(response, status.HTTP_409_CONFLICT, exception=True)
 
             response = {
                 'success': False,
@@ -820,7 +823,7 @@ class PasswordChangeRequestView(views.APIView):
             if self.model.objects.filter(Q(phone_number=data) | Q(email=data)).exists():
                 instance = self.model.objects.filter(
                     Q(phone_number=data) | Q(email=data)).first()
-                token = Token()
+                token = PasswodToken()
                 if self.passwordModel.objects.filter(UID=instance.UID).exists():
                     self.passwordModel.objects.filter(
                         UID=instance.UID).delete()
@@ -899,7 +902,7 @@ class PasswordChangeRequestConfirmationView(views.APIView):
                     instance = self.model.objects.get(
                         UID=passwodInstance.UID)
                     changepassword = passwodInstance.password
-                    token = Token()
+                    token = PasswodToken()
                     passwodInstance.delete()
                     newpasswordInstance = self.passwordModel.objects.create(
                         UID=instance.UID, password=changepassword, token=token)
@@ -1027,6 +1030,7 @@ class LoginUsingOtp(views.APIView):
 
 # logout view
 class LogoutView(views.APIView):
+    permission_classes = (AllowAny,)
 
     def post(self, request):
 
@@ -1052,3 +1056,56 @@ class LogoutView(views.APIView):
                 }
             }
             return Response(response, status.HTTP_404_NOT_FOUND)
+
+
+class OtpInstanceGenrator(views.APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        try:
+            data = request.data.get('phone_number')
+            if re.match(r'^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$', data):
+                otp = genrate_otp()
+                request.session['otp_instance'] = otp
+                request.session['phone_number_instance'] = data
+                # if sms_(message='concric: Your otp is &&OTP&&'.replace('&&OTP&&', otp), to='91'+data):
+                if 1:
+
+                    response = {
+                        'success': True,
+                        'data': {
+                            'phone_number': data,
+                            'message': OTP_SENT,
+                            'otp': otp
+                        }
+                    }
+                    return Response(response, status.HTTP_200_OK)
+                response = {
+                    'success': False,
+                    'error': {
+                        'message': INVALID_PHONE_NUMBER,
+                        'code': 400
+                    }
+
+                }
+                return Response(response, status.HTTP_400_BAD_REQUEST, exception=True)
+
+            response = {
+                'success': False,
+                'error': {
+                    'message': INVALID_PHONE_NUMBER,
+                    'code': 400
+                }
+
+            }
+            return Response(response, status.HTTP_400_BAD_REQUEST, exception=True)
+        except Exception as e:
+            response = {
+                'success': False,
+                'error': {
+                    'message': str(e),
+                    'code': 500
+                }
+            }
+
+            return Response(response, status.HTTP_500_INTERNAL_SERVER_ERROR, exception=True)

@@ -60,3 +60,10 @@ SOMTHING_WENT_WRONG = 'somthing went wrong'
 for phone number
 """
 PASSWORD_VERIFICATION_LINK_SENT_PHONE = 'a verification link send to your registred Phone number &&phone&&'
+
+
+
+"""
+FOR SPECIALIZATIONS 
+"""
+SPECIALIZATION_ADDED = 'Specialization added'
