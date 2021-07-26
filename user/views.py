@@ -1,5 +1,4 @@
 from user.utils.password import PasswodToken
-from rest_framework import exceptions
 from rest_framework_simplejwt.tokens import RefreshToken
 from cv001.settings import FRONT_END_LINK
 from datetime import timedelta

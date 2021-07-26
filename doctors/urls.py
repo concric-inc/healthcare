@@ -15,4 +15,8 @@ urlpatterns = [
          name='Specialization add'),
     path('doctor/hospital/add/', HospitalView.as_view(),
          name='hospital add'),
-]
+    path('doctor/office/', OfficeView.as_view(),
+         name='office'),
+    path('doctor/office/<str:id>', OfficeInstanceView.as_view(),
+         name='office instance'),
+         ]

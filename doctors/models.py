@@ -1,3 +1,4 @@
+from django.db.models.fields import BooleanField
 from django.utils import timezone
 from cv001.utils.uid import decode_id, encode_id
 from django.db import models
@@ -76,11 +77,12 @@ class hospital(models.Model):
     DOCID = models.CharField(_("doctor id"), null=False, max_length=150)
     name = models.CharField(_("hospital name"), null=False, max_length=150)
     city = models.CharField(_("city"), max_length=150)
-    start = models.DateField(_("start date"))
-    end = models.DateField(_("end date"))
+    start = models.DateField(_("start date"), null=True)
+    end = models.DateField(_("end date"), null=True)
 
     def save(self, *args, **kwargs):
         phone = decode_id(self.DOCID)['p']
+        print('test')
         hoid = encode_id(p=phone, t='hosp', ct=str(timezone.now()))
         self.HOID = hoid
         super(hospital, self).save(*args, **kwargs)
@@ -92,7 +94,18 @@ class office(models.Model):
     min_time_slot = models.IntegerField(_("min slot time"))
     first_consultation_fee = models.IntegerField(_("first consultation fee"))
     follow_up_fee = models.IntegerField(_("follow up fee"))
+    start = models.TimeField(_("start time"), null=True)
+    end = models.TimeField(_("end time"), null=True)
     AID = models.CharField(_("AID"), max_length=150, null=True)
+
+    # days
+    monday = models.BooleanField(_("monday"), default=True, null=True)
+    tuesday = models.BooleanField(_("tuesday"), default=True, null=True)
+    wednsday = models.BooleanField(_("wednesday"), default=True, null=True)
+    thrusday = models.BooleanField(_("thrusday"), default=True, null=True)
+    friday = models.BooleanField(_("friday"), default=True, null=True)
+    saturday = models.BooleanField(_("saturday"), default=True, null=True)
+    sunday = models.BooleanField(_("sunday"), default=True, null=True)
 
     def save(self, *args, **kwargs):
         phone = decode_id(self.DOCID)['p']

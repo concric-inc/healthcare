@@ -1,6 +1,6 @@
 from doctors.utils.modelfunctions import doctorinsatnce, getDocId
 from cv001.utils.utils import get_JWT_token, get_uid
-from doctors.ser import HospitalSer, SpecializationSer, doc_specializationSer
+from doctors.ser import HospitalSer, OfficeSer, SpecializationSer, doc_specializationSer
 from user.utils.jwt import get_tokens_for_user
 from cv001.utils.slugs import Gslug
 from user.models import user
@@ -359,8 +359,7 @@ class OfficeView(APIView):
 
     def get(self, request):
         try:
-            docid = getDocId(request=request)
-            instance = self.model.objects.filter(DOCID=docid).all()
+            instance = self.model.objects.get()
             serinstance = self.ser(instance, many=True)
             response = {
                 'success': True,
@@ -379,3 +378,54 @@ class OfficeView(APIView):
                 }
             }
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class OfficeInstanceView(APIView):
+    model = office
+    ser = OfficeSer
+
+    def get(self, request, id):
+        try:
+            instance = self.model.objects.get(id=id)
+            serinstance = self.ser(instance)
+            response = {
+                'success': True,
+                'data': {
+                    'message': SUCCESS,
+                    'data': serinstance.data
+                }
+            }
+            return Response(response, status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            response = {
+                'success': False,
+                'error': {
+                    'message': str(e),
+                    'code': 404
+                }
+            }
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, id):
+        try:
+            instance = self.model.objects.get(id=id)
+            instance.delete()
+            response = {
+                'success': True,
+                'data': {
+                    'message': SUCCESS,
+                }
+            }
+            return Response(response, status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            response = {
+                'success': False,
+                'error': {
+                    'message': str(e),
+                    'code': 404
+                }
+            }
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
+

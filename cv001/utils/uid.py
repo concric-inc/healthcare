@@ -6,7 +6,7 @@ def encode_id(**kwargs):
         payload[key] = value
     str_payload = json.dumps(payload).encode('ascii')
     encoded_payload = str(base64.b64encode(str_payload)).split("'")[1]
-    return encoded_payload.split('=')[0]
+    return encoded_payload
 
 
 def decode_id(id):
