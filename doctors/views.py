@@ -271,14 +271,6 @@ class HospitalView(APIView):
     model = hospital
     ser = HospitalSer
 
-    def getinsatnce(self, id):
-        instance = self.model.objects.filter(DOCID=id).all()
-        if instance:
-            return instance
-        else:
-            raise NotFound(detail='hospital not found',
-                           code=status.HTTP_404_NOT_FOUND)
-
     def post(self, request):
         try:
             docid = getDocId(request=request)
@@ -307,8 +299,8 @@ class HospitalView(APIView):
 
     def get(self, request):
         try:
-            docid = getDocId(request=request)
-            instance = self.getinsatnce(docid)
+
+            instance = self.model.objects.get()
             serdata = self.ser(instance, many=True)
             response = {
                 'success': True,
@@ -428,4 +420,3 @@ class OfficeInstanceView(APIView):
                 }
             }
             return Response(response, status=status.HTTP_404_NOT_FOUND)
-
