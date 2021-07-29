@@ -8,7 +8,7 @@ from user.utils.utils import is_user
 from cv001.messages import *
 from .models import *
 from rest_framework.views import *
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
@@ -89,7 +89,7 @@ class RegisterAsDoctorView(APIView):
 
 
 class SpecializationView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     Specializationmodel = specialization
     ser = SpecializationSer
 
@@ -142,7 +142,7 @@ class SpecializationView(APIView):
 
 
 class SpecializationInstanceView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     Specializationmodel = specialization
     ser = SpecializationSer
 
@@ -206,7 +206,7 @@ class SpecializationInstanceView(APIView):
 class doc_specializationView(APIView):
     ser = doc_specializationSer
     model = doc_specialization
-
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     def getinsatnce(self, id):
         instance = self.model.objects.filter(SPEID=id).all()
         if instance:
@@ -270,7 +270,7 @@ class doc_specializationView(APIView):
 class HospitalView(APIView):
     model = hospital
     ser = HospitalSer
-
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     def post(self, request):
         try:
             docid = getDocId(request=request)
@@ -296,11 +296,11 @@ class HospitalView(APIView):
                 }
             }
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    
     def get(self, request):
         try:
 
-            instance = self.model.objects.get()
+            instance = self.model.objects.all()
             serdata = self.ser(instance, many=True)
             response = {
                 'success': True,
@@ -324,7 +324,7 @@ class HospitalView(APIView):
 
 class OfficeView(APIView):
     model = office
-
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     def post(self, request):
         try:
             docid = getDocId(request=request)
@@ -351,7 +351,7 @@ class OfficeView(APIView):
 
     def get(self, request):
         try:
-            instance = self.model.objects.get()
+            instance = self.model.objects.all()
             serinstance = self.ser(instance, many=True)
             response = {
                 'success': True,
@@ -375,7 +375,7 @@ class OfficeView(APIView):
 class OfficeInstanceView(APIView):
     model = office
     ser = OfficeSer
-
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     def get(self, request, id):
         try:
             instance = self.model.objects.get(id=id)
