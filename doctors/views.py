@@ -324,6 +324,7 @@ class HospitalView(APIView):
 
 class OfficeView(APIView):
     model = office
+    ser = OfficeSer
     permission_classes = (IsAuthenticatedOrReadOnly,)
     def post(self, request):
         try:
@@ -357,6 +358,7 @@ class OfficeView(APIView):
                 'success': True,
                 'data': {
                     'message': SUCCESS,
+                    "data": serinstance.data
                 }
             }
             return Response(response, status.HTTP_200_OK)
@@ -371,6 +373,7 @@ class OfficeView(APIView):
             }
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# Issued :  Date and Time Management to be completed 
 
 class OfficeInstanceView(APIView):
     model = office

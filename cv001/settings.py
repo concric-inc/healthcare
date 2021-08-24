@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'cv001.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'healthcare',
+        'NAME': 'hc2',
         'HOST':'localhost',
         'USER':'postgres',
         'PASSWORD':'7889507465'
