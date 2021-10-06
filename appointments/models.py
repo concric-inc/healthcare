@@ -14,8 +14,8 @@ class Appointment(models.Model):
         _("Actual End Time"), blank=True, null=True)
     date = models.DateField()
     PST = models.TimeField(_('probable start time'))
-    statusId = models.CharField(
-        _("Status ID"), max_length=50, blank=True, null=True)
+    status= models.CharField(
+        _("Status"), max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

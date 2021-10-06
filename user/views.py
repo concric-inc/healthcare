@@ -1,3 +1,4 @@
+from datetime import datetime
 from user.utils.password import PasswodToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from cv001.settings import FRONT_END_LINK
@@ -11,7 +12,7 @@ from django.utils import timezone
 from cv001.utils.uid import decode_id, encode_id
 from cv001.utils.utils import get_JWT_token, get_uid
 from .models import Address, PasswordChangeRequestModel, PhoneNumber, Pincode, user, EmailToken
-from .ser import AddressSer, PhoneSer, PincodeSer, UpdateSer
+from .ser import AddressSer, PhoneSer, PincodeSer, UpdateSer, UserProfileSer
 from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import status
@@ -31,20 +32,22 @@ class RegisterPhoneView(views.APIView):
     def post(self, request):
         try:
             data = request.data.get('phone_number')
-            if re.match(r'^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$', data):
+            if re.match(r'^(\+91[\-\s]?)?[0]?(91)?[78965432189]\d{9}$', data):
                 if not is_user(data):
                     otp = genrate_otp()
                     request.session['otp'] = otp
                     request.session['phone_instance'] = data
+                    print(otp)
                     # if sms_(message='concric: Your otp is &&OTP&&'.replace('&&OTP&&', otp), to='91'+data):
                     if 1:
 
                         response = {
                             'success': True,
                             'data': {
+                                'code': 200,
                                 'phone_number': data,
                                 'message': OTP_SENT,
-                                'otp': otp
+
                             }
                         }
                         return Response(response, status.HTTP_200_OK)
@@ -85,7 +88,7 @@ class RegisterPhoneView(views.APIView):
                     'code': 500
                 }
             }
-
+            print(e)
             return Response(response, status.HTTP_500_INTERNAL_SERVER_ERROR, exception=True)
 
 
@@ -96,25 +99,30 @@ class OtpView(views.APIView):
 
     permission_classes = (AllowAny,)
     model = user
+    passwordModel = PasswordChangeRequestModel
 
     def post(self, request):
 
         try:
+            print(request.session['otp'])
             otp = request.data.get('otp')
             number = request.session['phone_instance']
             if not is_user(number):
                 if otp == request.session['otp']:
                     del request.session['otp']
-                    instance = self.model.objects.create(
-                        phone_number=number)
-                    instance.save(phone=number)
-                    token = get_tokens_for_user(instance)
+
+                    ptoken = PasswodToken()
+                    if self.passwordModel.objects.filter(UID=number).exists():
+                        self.passwordModel.objects.filter(
+                            UID=number).delete()
+                    PasswordInstance = self.passwordModel.objects.create(
+                        UID=number, password=number, token=ptoken)
 
                     response = {
                         'success': True,
                         'data': {
-                            'message': ACCOUNT_CREATED,
-                            'token': token
+                            'message': OTP_CONF,
+                            'set_token': PasswordInstance.token,
                         }
                     }
                     return Response(response, status.HTTP_201_CREATED)
@@ -180,30 +188,43 @@ class UpdateData(views.APIView):
             if 'last_name' in data:
                 userinstance.last_name = data['last_name']
                 response_data['last_name'] = data['last_name']
+            if 'age' in data:
+                userinstance.age = data['age']
+                response_data['age'] = data['age']
+            if 'gender' in data:
+                userinstance.gender = data['gender']
+                response_data['gender'] = data['gender']
+            if 'pincode' in data:
+                userinstance.pin = data['pincode']
+                response_data['pincode'] = data['pincode']
+            if 'address' in data:
+                userinstance.address = data['address']
+                response_data['address'] = data['address']
             if 'email' in data:
 
                 try:
-                    if self.model.objects.filter(email=data['email']).exists():
-                        raise Exception(
-                            'an account already is already registred on this email')
-                    token = email_token()
-                    if self.emailModel.objects.filter(email=data['email']).exists():
-                        self.emailModel.objects.filter(
-                            email=data['email']).first().delete()
-                    if self.emailModel.objects.filter(UID=userinstance.UID).exists():
-                        self.emailModel.objects.filter(
-                            UID=userinstance.UID).first().delete()
-                    self.emailModel.objects.create(
-                        UID=userinstance.UID, email=data['email'], Conf_token=token)
-                    send_email(
-                        email=data['email'], request=request, message=token)
-                    response_data['email'] = {
-                        'email': data['email'],
-                        'success': True,
-                        'info': 'verification link has been sent'
-                    }
-                    userinstance.email = data['email']
-                    userinstance.email_stats(False)
+                    if data['email'] != userinstance.email:
+                        if self.model.objects.filter(email=data['email']).exists():
+                            raise Exception(
+                                'an account already is already registred on this email')
+                        token = email_token()
+                        if self.emailModel.objects.filter(email=data['email']).exists():
+                            self.emailModel.objects.filter(
+                                email=data['email']).first().delete()
+                        if self.emailModel.objects.filter(UID=userinstance.UID).exists():
+                            self.emailModel.objects.filter(
+                                UID=userinstance.UID).first().delete()
+                        self.emailModel.objects.create(
+                            UID=userinstance.UID, email=data['email'], Conf_token=token)
+                        send_email(
+                            email=data['email'], request=request, message=token)
+                        response_data['email'] = {
+                            'email': data['email'],
+                            'success': True,
+                            'info': 'verification link has been sent'
+                        }
+                        userinstance.email = data['email']
+                        userinstance.email_stats(False)
                 except Exception as e:
                     response_data['email'] = {
                         'email': str(e),
@@ -239,7 +260,7 @@ class EmailConfView(views.APIView):
     token_model = EmailToken
 
     def is_expired(self, exp):
-        if exp > timezone.now()+timedelta(minutes=1):
+        if exp > timezone.localtime():
             return False
         return True
 
@@ -326,7 +347,7 @@ class AddressView(views.APIView):
             pincode_instance = None
         payload = decode_id(uid)
         aid = encode_id(
-            p=payload['p'], t='ad', cd=str(timezone.now()))
+            p=payload['p'], t='ad', cd=str(timezone.localtime()))
 
         instance = self.model.objects.create(AID=aid,
                                              address_line_one=querry_data['addr1'], address_line_two=querry_data[
@@ -806,7 +827,7 @@ Verifying phone for an instance and genrating a JWT
 """
 password change request model
 
-this requires user email 
+this requires user email
 
 """
 
@@ -817,6 +838,7 @@ class PasswordChangeRequestView(views.APIView):
     passwordModel = PasswordChangeRequestModel
 
     def post(self, request):
+
         try:
             data = request.data['credential']
 
@@ -840,7 +862,7 @@ class PasswordChangeRequestView(views.APIView):
                     sms_(message='concric: click to change password &&LINK&&'.replace(
                         '&&LINK&&', FRONT_END_LINK+"change/password/verify/"+token), to='91'+instance.phone_number)
                     resp['message'] = PASSWORD_VERIFICATION_LINK_SENT_PHONE.replace(
-                        '&&phone&&', instance.phone_number)
+                        '&&phone&&', instance.phone_number[6:])
                 response = {
                     'success': True,
                     'data': resp
@@ -886,6 +908,13 @@ class PasswordChangeRequestConfirmationView(views.APIView):
                 passwodInstance = self.passwordModel.objects.filter(
                     token=verif_token).first()
                 if not self.is_expired(passwodInstance.expiration):
+                    if passwodInstance.password == passwodInstance.UID:
+                        response = {
+                            'success': False,
+                            'message': "access denied",
+                            "code": 401
+                        }
+                        return Response(response, status=status.HTTP_401_UNAUTHORIZED)
                     userinstance = self.model.objects.get(
                         UID=passwodInstance.UID)
                     userinstance.set_password(passwodInstance.password)
@@ -899,13 +928,9 @@ class PasswordChangeRequestConfirmationView(views.APIView):
                     }
                     return Response(response, status.HTTP_202_ACCEPTED)
                 else:
-                    instance = self.model.objects.get(
-                        UID=passwodInstance.UID)
-                    changepassword = passwodInstance.password
-                    token = PasswodToken()
+
                     passwodInstance.delete()
-                    newpasswordInstance = self.passwordModel.objects.create(
-                        UID=instance.UID, password=changepassword, token=token)
+
                     response = {
                         'success': False,
                         'data': {
@@ -914,17 +939,6 @@ class PasswordChangeRequestConfirmationView(views.APIView):
                         }
                     }
 
-                    if instance.email != ' ':
-                        print(instance.email)
-                        send_email(request=request,
-                                   email=instance.email, message=token,)
-                        response['data']['password'] = PASSWORD_VERIFICATION_LINK_SENT_EMAIL.replace(
-                            '&&email&&', instance.email[:3])+instance.email.split('@')[1]
-                    else:
-                        sms_(message='concric: click to change password &&LINK&&'.replace(
-                            '&&LINK&&', FRONT_END_LINK+"change/password/verify/"+token), to='91'+instance.phone_number)
-                        response['data']['phone'] = PASSWORD_VERIFICATION_LINK_SENT_PHONE.replace(
-                            '&&phone&&', instance.phone_number)
                     return Response(response, status.HTTP_401_UNAUTHORIZED)
 
             else:
@@ -1045,6 +1059,7 @@ class LogoutView(views.APIView):
                         'message': SUCCESS,
                     }
                 }
+                print("logout")
                 return Response(response, status=status.HTTP_205_RESET_CONTENT)
             raise Exception('token not found')
         except Exception as e:
@@ -1109,3 +1124,121 @@ class OtpInstanceGenrator(views.APIView):
             }
 
             return Response(response, status.HTTP_500_INTERNAL_SERVER_ERROR, exception=True)
+
+
+class SetPasswordChangeRequestConfirmationView(views.APIView):
+    """
+    - verification_token
+    - password
+    """
+    model = user
+    passwordModel = PasswordChangeRequestModel
+    permission_classes = (AllowAny,)
+
+    def is_expired(self, exp):
+        if exp > timezone.localtime():
+            return False
+        return True
+
+    def post(self, request):
+        print("helo")
+        try:
+            verif_token = request.data.get('verification_token')
+            if self.passwordModel.objects.filter(token=verif_token).exists():
+                passwodInstance = self.passwordModel.objects.filter(
+                    token=verif_token).first()
+                print(timezone.localtime())
+
+                if not self.is_expired(passwodInstance.expiration):
+                    print("url")
+                    if passwodInstance.password == passwodInstance.UID:
+                        instance = self.model.objects.create(
+                            phone_number=passwodInstance.UID)
+                        instance.save(phone=passwodInstance.UID)
+                        instance.set_password(request.data.get('password'))
+                        instance.save()
+                        token = get_tokens_for_user(instance)
+                        passwodInstance.delete()
+                        response = {
+                            'success': True,
+                            'data': {
+                                'message': ACCOUNT_CREATED,
+                                'tokens': token
+                            }
+                        }
+                        return Response(response, status.HTTP_202_ACCEPTED)
+                    else:
+                        response = {
+                            'success': False,
+                            'error': {
+                                'message': "access denied",
+                                'code': 401
+                            }
+                        }
+                        return Response(response, status.HTTP_401_UNAUTHORIZED)
+                else:
+
+                    response = {
+                        'success': False,
+                        'data': {
+                            'message': PASSWORD_TOKEN_INVALID,
+                            'code': 401
+                        }
+                    }
+
+                    return Response(response, status.HTTP_401_UNAUTHORIZED)
+
+            else:
+                response = {
+                    'success': False,
+                    'error': {
+                        'message': TOKEN_NOT_FOUND,
+                        'code': 404
+                    }
+                }
+
+                return Response(response, status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            print(e)
+            response = {
+                'success': False,
+                'error': {
+                    'message': SOMTHING_WENT_WRONG,
+                    'code': 500
+                }
+            }
+            return Response(response, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ProfileData(views.APIView):
+    model = user
+    ser = UserProfileSer
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+
+        print("sd")
+        try:
+            uid = get_uid(get_JWT_token(request=request))
+            instance = self.model.objects.filter(UID=uid)
+            dataser = self.ser(instance, many=True)
+            response = {
+                'success': True,
+                'data': {
+                    'message': SUCCESS,
+                },
+                'data': dataser.data
+            }
+            return Response(response, status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            print("R")
+            response = {
+                'success': False,
+                'error': {
+                    'message': SOMTHING_WENT_WRONG,
+                    'code': 500
+                }
+            }
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
