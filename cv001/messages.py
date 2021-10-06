@@ -32,6 +32,7 @@ for otp
 """
 OTP_SENT = 'a otp has been send to this number'
 OTP_INVALID = 'invalid otp'
+OTP_CONF = 'otp confirmed'
 
 """
 for token
@@ -45,6 +46,7 @@ TOKEN_INVALID = 'token is invalid'
 for password
 """
 PASSWORD_CHANGED = 'password changed'
+PASSWORD_SET = 'password set'
 PASSWORD_TOKEN_INVALID = 'password token invalid or expired'
 INCORRECT_PASSWORD = 'password incorrect'
 """
@@ -59,7 +61,7 @@ SOMTHING_WENT_WRONG = 'somthing went wrong'
 """
 for phone number
 """
-PASSWORD_VERIFICATION_LINK_SENT_PHONE = 'a verification link send to your registred Phone number &&phone&&'
+PASSWORD_VERIFICATION_LINK_SENT_PHONE = 'a verification link send to your registred Phone number ending with &&phone&&'
 
 
 

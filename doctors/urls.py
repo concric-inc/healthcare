@@ -13,7 +13,7 @@ urlpatterns = [
          name='Specialization regestration instance'),
     path('doctor/specialization/add/<str:speid>/', doc_specializationView.as_view(),
          name='Specialization add'),
-    path('doctor/hospital/add/', HospitalView.as_view(),
+    path('doctor/hospital/', HospitalView.as_view(),
          name='hospital add'),
     path('doctor/office/', OfficeView.as_view(),
          name='office'),

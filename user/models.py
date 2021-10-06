@@ -1,3 +1,4 @@
+
 from cv001.utils.uid import encode_id
 from datetime import datetime, timedelta
 
@@ -81,6 +82,12 @@ class user(AbstractBaseUser, PermissionsMixin):
         ),
     )
     date_joined = models.DateTimeField(_('date joined'), auto_now=True)
+    gender = models.CharField(_('gender'), max_length=10, choices=[
+                              ('m', 'male'), ('f', 'female'), ('o', 'other')], blank=True)
+    age = models.IntegerField(_('age'), null=True)
+    address = models.CharField(_("address"), max_length=300,blank=True)
+    pin = models.CharField(_("pin"), max_length=17,blank=True)
+    
     objects = CustomUserManager()
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'phone_number'
@@ -173,6 +180,10 @@ class Address(models.Model):
     )
     created_on = models.DateField(_('created on'), auto_now=True)
     updated_on = models.DateField(_('updated on'), null=True)
+    pincode_number = models.CharField(_('Pincode'), validators=[], max_length=17,
+                                      help_text=_('Enter a Pincode'), default=None
+                                      )
+    address = models.CharField(_("address"), max_length=300, default=None)
 
     def aid(self):
         return self.AID
@@ -260,7 +271,7 @@ class EmailToken(models.Model):
         _("Token"), max_length=100, null=False, unique=True)
     created_on = models.DateTimeField(_("created"), auto_now=True)
     expiration = models.DateTimeField(
-        _("expiration"), default=timezone.now()+timedelta(minutes=9))
+        _("expiration"), default=timezone.localtime()+timedelta(minutes=9))
 
 
 class PasswordChangeRequestModel(models.Model):
@@ -273,4 +284,4 @@ class PasswordChangeRequestModel(models.Model):
     token = models.CharField(_("conf token"), max_length=100)
     created_on = models.DateTimeField(_("created on"), auto_now=True)
     expiration = models.DateTimeField(
-        _("expiration"), default=timezone.now()+timedelta(minutes=9))
+        _("expiration"), default=timezone.localtime()+timedelta(minutes=15))

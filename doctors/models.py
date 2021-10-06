@@ -77,8 +77,8 @@ class hospital(models.Model):
     DOCID = models.CharField(_("doctor id"), null=False, max_length=150)
     name = models.CharField(_("hospital name"), null=False, max_length=150)
     city = models.CharField(_("city"), max_length=150)
-    start = models.DateField(_("start date"), null=True)
-    end = models.DateField(_("end date"), null=True)
+    start = models.DateField(_("start date"))
+    end = models.DateField(_("end date"))
 
     def save(self, *args, **kwargs):
         phone = decode_id(self.DOCID)['p']
@@ -94,12 +94,12 @@ class office(models.Model):
     min_time_slot = models.IntegerField(_("min slot time"))
     first_consultation_fee = models.IntegerField(_("first consultation fee"))
     follow_up_fee = models.IntegerField(_("follow up fee"))
-    start = models.TimeField(_("start time"), null=True)
-    end = models.TimeField(_("end time"), null=True)
+    start = models.TimeField(_("start time"), auto_now=True)
+    end = models.TimeField(_("end time"), auto_now=True)
     AID = models.CharField(_("AID"), max_length=150, null=True)
-
+    
     # days
-    monday = models.BooleanField(_("monday"), default=True, null=True)
+    monday = models.BooleanField(_("monday"), default=True)
     tuesday = models.BooleanField(_("tuesday"), default=True, null=True)
     wednsday = models.BooleanField(_("wednesday"), default=True, null=True)
     thrusday = models.BooleanField(_("thrusday"), default=True, null=True)

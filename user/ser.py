@@ -69,6 +69,7 @@ class PhoneSer(serializers.ModelSerializer):
             'PHID': {'read_only': True},
         }
 
+
 class PincodeSer(serializers.ModelSerializer):
     class Meta:
         model = Pincode
@@ -77,3 +78,10 @@ class PincodeSer(serializers.ModelSerializer):
             'PCID': {'read_only': True},
         }
 
+
+class UserProfileSer(serializers.ModelSerializer):
+
+    class Meta:
+        model = user
+        fields = ['phone_number', 'first_name',
+                  'last_name', 'email', 'gender', 'age', 'pin',  'address']
