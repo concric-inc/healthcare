@@ -13,6 +13,8 @@ class doctor(models.Model):
         help_text=('User id'),
         unique=True
     )
+    registration_number = models.CharField(
+        max_length=150, blank=True, null=True)
     professional_statement = models.TextField(
         _('professional_statement'), null=True)  # detailed overview of the doctor’s qualifications
     # url for acessing this model
@@ -78,6 +80,7 @@ class hospital(models.Model):
     name = models.CharField(_("hospital name"), null=False, max_length=150)
     city = models.CharField(_("city"), max_length=150)
     start = models.DateField(_("start date"))
+    currently_working = models.BooleanField(default=False)
     end = models.DateField(_("end date"))
 
     def save(self, *args, **kwargs):
@@ -91,13 +94,14 @@ class hospital(models.Model):
 class office(models.Model):
     OFID = models.CharField(_("hospital id"), primary_key=True, max_length=150)
     DOCID = models.CharField(_("doctor id"), null=False, max_length=150)
+    name = models.CharField(_("office name"), null=True, max_length=150)
     min_time_slot = models.IntegerField(_("min slot time"))
     first_consultation_fee = models.IntegerField(_("first consultation fee"))
-    follow_up_fee = models.IntegerField(_("follow up fee"))
+    follow_up_fee = models.IntegerField(_("follow up fee"), null=True)
     start = models.TimeField(_("start time"), auto_now=True)
     end = models.TimeField(_("end time"), auto_now=True)
     AID = models.CharField(_("AID"), max_length=150, null=True)
-    
+
     # days
     monday = models.BooleanField(_("monday"), default=True)
     tuesday = models.BooleanField(_("tuesday"), default=True, null=True)
