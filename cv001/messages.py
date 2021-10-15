@@ -25,12 +25,12 @@ for email
 """
 EMAIL_CONFIRMED = 'email is confirmed'
 EMAIL_TOKEN_EXPIRED = 'verification token expired'
-PASSWORD_VERIFICATION_LINK_SENT_EMAIL = 'a verification link send to your email account &&email&&xxx'
+PASSWORD_VERIFICATION_LINK_SENT_EMAIL = 'a verification link has been send to your email account &&email&&xxx'
 
 """
 for otp
 """
-OTP_SENT = 'a otp has been send to this number'
+OTP_SENT = 'an otp has been send to this number'
 OTP_INVALID = 'invalid otp'
 OTP_CONF = 'otp confirmed'
 

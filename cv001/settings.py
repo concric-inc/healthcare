@@ -64,9 +64,13 @@ CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE = 'None'
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-#CORS_ORIGIN_WHITELIST = [
-#    'http://localhost:3008',
-#]
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3008',
+    'http://localhost:3000',
+    'https://www.concric.com'
+]
+
 CORS_ALLOW_HEADERS = ["accept",
                       "accept-encoding",
                       "authorization",
@@ -104,17 +108,25 @@ WSGI_APPLICATION = 'cv001.wsgi.application'
 
 DATABASES = {
     'default': {
+
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'architprasar$thesteth',
         'HOST': 'architprasar.mysql.pythonanywhere-services.com',
         'USER': 'architprasar',
         'PASSWORD': '26@Prasar',
 
+
         # 'ENGINE': 'django.db.backends.postgresql',
-        # 'NAME': 'hc2',
-        # 'HOST': 'localhost',
+        # 'NAME': 'postgres',
+        # 'HOST': 'db.ydsppapwfnwhcqoposlv.supabase.co',
         # 'USER': 'postgres',
-        # 'PASSWORD': '7889507465'
+        # 'PASSWORD': '26@Prasarsteth',
+        # 'PORT ': '6543'
+        #'ENGINE': 'django.db.backends.postgresql',
+        #'NAME': 'hc2',
+        # 'HOST': 'localhost',
+         #'USER': 'postgres',
+        #'PASSWORD': '7889507465'
     }
 }
 

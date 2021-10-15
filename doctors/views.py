@@ -31,7 +31,7 @@ class RegisterAsDoctorView(APIView):
         try:
             data = request.data.get('otp')
             if data == request.session['otp_instance']:
-                del request.session['otp_instance']
+
                 phone_number = request.session['phone_number_instance']
                 if self.is_doctor(phone_number=phone_number):
                     response = {
@@ -44,29 +44,29 @@ class RegisterAsDoctorView(APIView):
                     }
                     return Response(response, status.HTTP_409_CONFLICT, exception=True)
 
-                response = {
-                    'success': True,
-                    'data': {
-                        'message': ACCOUNT_CREATED,
-                    }
-                }
-                if not is_user(phone_number):
-                    instance = self.usermodel.objects.create(
-                        phone_number=phone_number)
-                    instance.save()
-                    doctorinstance = self.doctormodel.objects.create(
-                        UID=instance.UID, slug=Gslug(model=self.doctormodel))
-                    doctorinstance.save()
-                    token = get_tokens_for_user(instance)
-                    response['data']['token'] = token
+                instance = self.getinsatnce(phone_number)
 
-                else:
-                    instance = self.getinsatnce(phone_number)
-                    doctorinstance = self.doctormodel.objects.create(
-                        UID=instance.UID, slug=Gslug(model=self.doctormodel))
+                if instance.is_doctor == True:
+                    response = {
+                        'success': True,
+                        'data': {
+                            'message': "Logged in",
+                        }
+                    }
+                    del request.session['otp_instance']
+
                     token = get_tokens_for_user(instance)
                     response['data']['token'] = token
-                return Response(response, status.HTTP_200_OK)
+                    return Response(response, status.HTTP_200_OK)
+                else:
+                    response = {
+                        'success': False,
+                        'error': {
+                            'message': 'access denied',
+                            'code': 401
+                        }
+                    }
+                    return Response(response, status.HTTP_401_UNAUTHORIZED, exception=True)
             response = {
                 'success': False,
                 'error': {
@@ -207,6 +207,7 @@ class doc_specializationView(APIView):
     ser = doc_specializationSer
     model = doc_specialization
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
     def getinsatnce(self, id):
         instance = self.model.objects.filter(SPEID=id).all()
         if instance:
@@ -271,6 +272,7 @@ class HospitalView(APIView):
     model = hospital
     ser = HospitalSer
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
     def post(self, request):
         try:
             docid = getDocId(request=request)
@@ -296,7 +298,7 @@ class HospitalView(APIView):
                 }
             }
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
     def get(self, request):
         try:
 
@@ -326,6 +328,7 @@ class OfficeView(APIView):
     model = office
     ser = OfficeSer
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
     def post(self, request):
         try:
             docid = getDocId(request=request)
@@ -373,12 +376,14 @@ class OfficeView(APIView):
             }
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# Issued :  Date and Time Management to be completed 
+# Issued :  Date and Time Management to be completed
+
 
 class OfficeInstanceView(APIView):
     model = office
     ser = OfficeSer
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
     def get(self, request, id):
         try:
             instance = self.model.objects.get(id=id)

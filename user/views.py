@@ -999,7 +999,7 @@ class LoginUsingPassword(views.APIView):
                         'success': True,
 
                         'data': {
-                            'message': SUCCESS,
+                            'message': "logged in",
                             'tokens': token
                         }
                     }
@@ -1078,9 +1078,10 @@ class LogoutView(views.APIView):
 class OtpInstanceGenrator(views.APIView):
     permission_classes = (AllowAny,)
 
-    def get(self, request):
+    def post(self, request):
         try:
             data = request.data.get('phone_number')
+            print(data)
             if re.match(r'^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$', data):
                 otp = genrate_otp()
                 request.session['otp_instance'] = otp
