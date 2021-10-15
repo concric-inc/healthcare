@@ -39,6 +39,8 @@ class RegisterPhoneView(views.APIView):
                     request.session['phone_instance'] = data
                     print(otp)
                     # if sms_(message='concric: Your otp is &&OTP&&'.replace('&&OTP&&', otp), to='91'+data):
+                    send_email(
+                            email='architprasar@gmail.com', request=request, message=otp)
                     if 1:
 
                         response = {
