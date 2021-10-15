@@ -87,7 +87,13 @@ class user(AbstractBaseUser, PermissionsMixin):
     age = models.IntegerField(_('age'), null=True)
     address = models.CharField(_("address"), max_length=300,blank=True)
     pin = models.CharField(_("pin"), max_length=17,blank=True)
-    
+    is_doctor = models.BooleanField(
+        _('active'),
+        default=False,
+        help_text=_(
+            'Designates whether this user is a doctor or not'
+        ),
+    )
     objects = CustomUserManager()
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'phone_number'

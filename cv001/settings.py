@@ -66,6 +66,8 @@ CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3008',
+    'http://localhost:3000',
+    'https://www.concric.com'
 ]
 CORS_ALLOW_HEADERS = ["accept",
                       "accept-encoding",
@@ -104,17 +106,17 @@ WSGI_APPLICATION = 'cv001.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'HOST': 'db.ydsppapwfnwhcqoposlv.supabase.co',
-        'USER': 'postgres',
-        'PASSWORD': '26@Prasarsteth',
-        'PORT ': '6543'
         # 'ENGINE': 'django.db.backends.postgresql',
-        # 'NAME': 'hc2',
-        # 'HOST': 'localhost',
+        # 'NAME': 'postgres',
+        # 'HOST': 'db.ydsppapwfnwhcqoposlv.supabase.co',
         # 'USER': 'postgres',
-        # 'PASSWORD': '7889507465'
+        # 'PASSWORD': '26@Prasarsteth',
+        # 'PORT ': '6543'
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'hc2',
+         'HOST': 'localhost',
+         'USER': 'postgres',
+        'PASSWORD': '7889507465'
     }
 }
 
