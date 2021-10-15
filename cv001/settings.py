@@ -68,7 +68,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3008',
     'http://localhost:3000',
-    'https://www.concric.com'
+    'https://www.concric.com',
+    'https://register.concric.com'
 ]
 
 CORS_ALLOW_HEADERS = ["accept",
