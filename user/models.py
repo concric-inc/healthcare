@@ -1,8 +1,11 @@
 
 from cv001.utils.uid import encode_id
 from datetime import datetime, timedelta
-
 from django.db import models
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
 from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils.translation import gettext_lazy as _
@@ -85,10 +88,10 @@ class user(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(_('gender'), max_length=10, choices=[
                               ('m', 'male'), ('f', 'female'), ('o', 'other')], blank=True)
     age = models.IntegerField(_('age'), null=True)
-    address = models.CharField(_("address"), max_length=300,blank=True)
-    pin = models.CharField(_("pin"), max_length=17,blank=True)
+    address = models.CharField(_("address"), max_length=300, blank=True)
+    pin = models.CharField(_("pin"), max_length=17, blank=True)
     is_doctor = models.BooleanField(
-        _('active'),
+        _('Doctor active'),
         default=False,
         help_text=_(
             'Designates whether this user is a doctor or not'
@@ -291,3 +294,26 @@ class PasswordChangeRequestModel(models.Model):
     created_on = models.DateTimeField(_("created on"), auto_now=True)
     expiration = models.DateTimeField(
         _("expiration"), default=timezone.localtime()+timedelta(minutes=15))
+
+
+class img(models.Model):
+    image = models.ImageField(upload_to='images/user')
+
+    def save(self, dict):
+        if not self.id:
+            self.image = compressImage2(self.image, dict)
+        else:
+            self.image = compressImage2(self.image, dict)
+        super().save()
+
+
+def compressImage2(images, dict):
+    imageTemporary = Image.open(images)
+    outputstream = BytesIO()
+    imageTemporary2 = imageTemporary.crop(
+        (dict['left'], dict['top'], dict['right'],  dict['bottom']))
+    imageTemporary2.save(outputstream, format='JPEG', quality=40)
+    outputstream.seek(0)
+    images = InMemoryUploadedFile(outputstream, 'ImageField', "%s.jpg" % images.name.split('.')[
+        0], 'image/jpeg', sys.getsizeof(outputstream), None)
+    return images

@@ -1,6 +1,7 @@
+import json
 from doctors.utils.modelfunctions import doctorinsatnce, getDocId
-from cv001.utils.utils import get_JWT_token, get_uid
-from doctors.ser import HospitalSer, OfficeSer, SpecializationSer, doc_specializationSer
+from cv001.utils.utils import get_JWT_token, get_uid, retdate, rettime
+from doctors.ser import HospitalSer, OfficeSer, SpecializationSer, doc_specializationSer, docser, usseSer
 from user.utils.jwt import get_tokens_for_user
 from cv001.utils.slugs import Gslug
 from user.models import user
@@ -86,6 +87,88 @@ class RegisterAsDoctorView(APIView):
                 }
             }
             return Response(response, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class DoctorView(APIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    doctormodel = doctor
+    ser = docser
+    usermodel = user
+
+    def post(self, request):
+        try:
+            uid = get_uid(get_JWT_token(request=request))
+            if self.doctormodel.objects.filter(UID=uid).exists():
+                print('user')
+                response = {
+                    'success': True,
+                    'data': {
+                        'message': USER_ALREADY_EXISTS,
+                        'code': 200
+                    }
+                }
+                return Response(response, status.HTTP_200_OK)
+            userInstance = self.usermodel.objects.filter(UID=uid).first()
+            if userInstance.is_doctor == True:
+                print('user is doctor')
+                doctorinsatnce = self.doctormodel.objects.create(
+                    UID=userInstance.UID,
+                    registration_number=request.data.get(
+                        'registration_number'),
+                    professional_statement=request.data.get(
+                        'professional_statement'),
+                    practicing_from=retdate(
+                        request.data.get('practicing_from')),
+                    slug=Gslug(model=self.doctormodel,))
+                response = {
+                    'success': True,
+                    'data': {
+                        'message': "created successfully",
+                    }
+                }
+                return Response(response, status.HTTP_201_CREATED)
+            else:
+                response = {
+                    'success': False,
+                    'error': {
+                        'message': 'access denied',
+                        'code': 401
+                    }
+                }
+                return Response(response, status.HTTP_401_UNAUTHORIZED, exception=True)
+
+        except Exception as e:
+            print(e)
+            response = {
+                'success': False,
+                'error': {
+                    'message': str(e),
+                    'code': 500
+                }}
+            return Response(response, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get(self, request):
+
+        try:
+            instance = self.doctormodel.objects.all()
+            serinstance = self.ser(instance, many=True)
+            response = {
+                'success': True,
+                'data': {
+                    'message': SUCCESS,
+                    "data": serinstance.data
+                }
+            }
+            return Response(response, status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            response = {
+                'success': False,
+                'error': {
+                    'message': str(e),
+                    'code': 500
+                }
+            }
 
 
 class SpecializationView(APIView):
@@ -277,9 +360,17 @@ class HospitalView(APIView):
         try:
             docid = getDocId(request=request)
             data = request.data
+            enddata = ""
+            cw = ""
+            if data['end'] == None:
+                enddata = None
+                Cw = True
+            else:
+                enddata = retdate(data['end'])
+                Cw = False
             instance = self.model.objects.create(
-                DOCID=docid, name=data['hospital_name'], city=data['hospital_city'],
-                start=data['start'], end=data['end'])
+                DOCID=docid, name=data['name'], city=data['city'],
+                start=retdate(data['start']), currently_working=Cw, end=enddata)
             instance.save()
             response = {
                 'success': True,
@@ -293,7 +384,7 @@ class HospitalView(APIView):
             response = {
                 'success': False,
                 'error': {
-                    'message': SOMTHING_WENT_WRONG,
+                    'message': str(e),
                     'code': 500
                 }
             }
@@ -334,7 +425,9 @@ class OfficeView(APIView):
             docid = getDocId(request=request)
             data = request.data
             instance = self.model.objects.create(
-                DOCID=docid, min_time_slot=data['min_time_slot'], first_consultation_fee=data['first_consultation_fee'], follow_up_fee=data['follow_up_fee'])
+                name=data['name'],
+                DOCID=docid, min_time_slot=int(data['min']), first_consultation_fee=data['fee'],
+                start=rettime(data['start']), end=rettime(data['end']), monday=data['mon'], tuesday=data['tue'], wednesday=data['wed'], thursday=data['thu'], friday=data['fri'], saturday=data['sat'], sunday=data['sun'])
             response = {
                 'success': True,
                 'data': {
@@ -382,11 +475,13 @@ class OfficeView(APIView):
 class OfficeInstanceView(APIView):
     model = office
     ser = OfficeSer
+    doc = doctor
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get(self, request, id):
         try:
-            instance = self.model.objects.get(id=id)
+            doc = self.doc.objects.filter(slug=id).first()
+            instance = self.model.objects.filter(DOCID=doc.DOCID).first()
             serinstance = self.ser(instance)
             response = {
                 'success': True,
@@ -409,7 +504,8 @@ class OfficeInstanceView(APIView):
 
     def delete(self, request, id):
         try:
-            instance = self.model.objects.get(id=id)
+            doc = self.doc.objects.filter(slug=id).first()
+            instance = self.model.objects.filter(DOCID=doc.DOCID).first()
             instance.delete()
             response = {
                 'success': True,
@@ -417,6 +513,78 @@ class OfficeInstanceView(APIView):
                     'message': SUCCESS,
                 }
             }
+            return Response(response, status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            response = {
+                'success': False,
+                'error': {
+                    'message': str(e),
+                    'code': 404
+                }
+            }
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
+
+
+class QualiView(APIView):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    qualmodel = qualification
+    usermodel = user
+
+    def post(self, request):
+        try:
+            docid = getDocId(request=request)
+            data = request.data
+            instance = self.qualmodel.objects.create(
+                DOCID=docid, name=data['name'], institute=data['institute'],
+                year=retdate(data['prodate']), city=data['city'])
+            response = {
+                'success': True,
+                'data': {
+                    'message': SUCCESS,
+                }
+            }
+            return Response(response, status.HTTP_200_OK)
+
+        except Exception as e:
+            print(e)
+            response = {
+                'success': False,
+                'error': {
+                    'message': SOMTHING_WENT_WRONG,
+                    'code': 500
+                }}
+            return Response(response, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class getAllDoctorData(APIView):
+    permission_classes = (AllowAny,)
+    model = doctor
+    officemodel = office
+    ser = docser
+    userser = usseSer
+    usermodel = user
+
+    def post(self, request):
+        try:
+            SLUG = request.data["SLUG"]
+            response = {
+                'success': True,
+                'data': {}
+            }
+            instance = self.model.objects.filter(slug=SLUG).first()
+            docid = instance.DOCID
+            uid = instance.UID
+            userinstance = self.usermodel.objects.filter(UID=uid).first()
+            officeinstance = self.officemodel.objects.filter(
+                DOCID=docid).first()
+            ofid = officeinstance.OFID
+            serdata = self.ser(instance,)
+            userserdata = self.userser(userinstance)
+            response['data']['doctor'] = serdata.data
+            response['data']['user'] = userserdata.data
+            response['data']['ofid'] = ofid
+
             return Response(response, status.HTTP_200_OK)
         except Exception as e:
             print(e)

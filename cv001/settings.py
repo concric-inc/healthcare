@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from cv001.secrets import EMAIL_PASSWORD
 from pathlib import Path
+import os
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -110,11 +111,11 @@ WSGI_APPLICATION = 'cv001.wsgi.application'
 DATABASES = {
     'default': {
 
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'architprasar$thesteth',
-        'HOST': 'architprasar.mysql.pythonanywhere-services.com',
-        'USER': 'architprasar',
-        'PASSWORD': '26@Prasar',
+        # 'ENGINE': 'django.db.backends.mysql',
+        # 'NAME': 'architprasar$thesteth',
+        # 'HOST': 'architprasar.mysql.pythonanywhere-services.com',
+        # 'USER': 'architprasar',
+        # 'PASSWORD': '26@Prasar',
 
 
         # 'ENGINE': 'django.db.backends.postgresql',
@@ -123,11 +124,11 @@ DATABASES = {
         # 'USER': 'postgres',
         # 'PASSWORD': '26@Prasarsteth',
         # 'PORT ': '6543'
-        #'ENGINE': 'django.db.backends.postgresql',
-        #'NAME': 'hc2',
-        # 'HOST': 'localhost',
-         #'USER': 'postgres',
-        #'PASSWORD': '7889507465'
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'hc2',
+        'HOST': 'localhost',
+        'USER': 'postgres',
+        'PASSWORD': '7889507465'
     }
 }
 
@@ -206,6 +207,12 @@ SIMPLE_JWT = {
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "croppo\\static")
+]
+STATIC_ROOT = os.path.join(BASE_DIR, "assets")
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "croppo\\static\\images")
 
 # email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

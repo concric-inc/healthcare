@@ -17,6 +17,10 @@ urlpatterns = [
          name='hospital add'),
     path('doctor/office/', OfficeView.as_view(),
          name='office'),
-    path('doctor/office/<str:id>', OfficeInstanceView.as_view(),
+    path('doctor/office/<str:id>/', OfficeInstanceView.as_view(),
          name='office instance'),
-         ]
+    path('add/doctor/', DoctorView.as_view(), name='doctor add'),
+    path('doctor/qualification/', QualiView.as_view(),
+         name='qualification'),
+     path('doc/', getAllDoctorData.as_view(),name='all doctor data'),
+]

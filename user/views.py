@@ -1,4 +1,7 @@
+from ast import Not
 from datetime import datetime
+from http.client import NOT_FOUND
+import json
 from user.utils.password import PasswodToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from cv001.settings import FRONT_END_LINK
@@ -11,7 +14,7 @@ from .utils.modelFunctions import savephone, savepin, update_address
 from django.utils import timezone
 from cv001.utils.uid import decode_id, encode_id
 from cv001.utils.utils import get_JWT_token, get_uid
-from .models import Address, PasswordChangeRequestModel, PhoneNumber, Pincode, user, EmailToken
+from .models import Address, PasswordChangeRequestModel, PhoneNumber, Pincode, user, EmailToken, img
 from .ser import AddressSer, PhoneSer, PincodeSer, UpdateSer, UserProfileSer
 from rest_framework import views
 from rest_framework.response import Response
@@ -40,7 +43,7 @@ class RegisterPhoneView(views.APIView):
                     print(otp)
                     # if sms_(message='concric: Your otp is &&OTP&&'.replace('&&OTP&&', otp), to='91'+data):
                     send_email(
-                            email='architprasar@gmail.com', request=request, message=otp)
+                        email='architprasar@gmail.com', request=request, message=otp)
                     if 1:
 
                         response = {
@@ -1077,12 +1080,21 @@ class LogoutView(views.APIView):
 
 class OtpInstanceGenrator(views.APIView):
     permission_classes = (AllowAny,)
+    model = user
 
     def post(self, request):
         try:
             data = request.data.get('phone_number')
-            print(data)
             if re.match(r'^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$', data):
+                if not self.model.objects.filter(phone_number=data).exists():
+                    response = {
+                        'success': False,
+                        'error': {
+                            'message': USER_NOT_FOUND,
+                            'code': 409
+                        }
+                    }
+                    return Response(response, status=status.HTTP_409_CONFLICT)
                 otp = genrate_otp()
                 request.session['otp_instance'] = otp
                 request.session['phone_number_instance'] = data
@@ -1245,3 +1257,28 @@ class ProfileData(views.APIView):
                 }
             }
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ProfileImage(views.APIView):
+    def get(self, request):
+        if request.FILES.get('file') != "":
+            profile = img()
+            profile.image = request.FILES.get('file')
+            j = request.POST['cdata']
+            data = json.loads(j)
+            profile.save(data)
+            response = {
+                'success': True,
+                'data': {
+                    'message': SUCCESS,
+                },
+            }
+            return Response(response, status.HTTP_200_OK)
+        else:
+            response = {
+                'success': True,
+                'data': {
+                    'message': NOT_FOUND,
+                },
+            }
+            return Response(response, status.HTTP_404_NOT_FOUND)
